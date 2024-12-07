@@ -4,9 +4,8 @@ FROM jenkins/jenkins:lts
 # Passer à l'utilisateur root pour installer des paquets
 USER root
 
-# Mettre à jour les dépôts et installer OpenJDK 17 et wget
-RUN apt-get update && \
-    apt-get install -y wget openjdk-17-jdk
+# Installer OpenJDK 17 et wget
+RUN apt-get update && apt-get install -y wget openjdk-17-jdk
 
 # Télécharger et installer Tomcat 7.0.109
 RUN wget https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tomcat-7.0.109.tar.gz -P /opt && \
@@ -16,12 +15,20 @@ RUN wget https://archive.apache.org/dist/tomcat/tomcat-7/v7.0.109/bin/apache-tom
 # Renommer le dossier Tomcat
 RUN mv /opt/apache-tomcat-7.0.109 /opt/tomcat
 
-# Définir les variables d'environnement pour JAVA_HOME et PATH
-ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
-ENV PATH=$JAVA_HOME/bin:$PATH
+# Modifier le port de Tomcat dans le fichier server.xml
+RUN sed -i 's/8080/8081/g' /opt/tomcat/conf/server.xml
 
-# Exposer les ports Jenkins et Tomcat
-EXPOSE 8011 50000
+# Copier le fichier .war dans Tomcat
+COPY target/javajenkins.war /opt/tomcat/webapps/
 
-# Démarrer Jenkins et Tomcat
-CMD ["bash", "-c", "jenkins & /opt/tomcat/bin/catalina.sh run"]
+# Copier le fichier entrypoint.sh dans /usr/local/bin
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+
+# Donner les permissions d'exécution
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+# Exposer les ports 8081 pour Tomcat et 8080 pour Jenkins
+EXPOSE 8081 8080 50000
+
+# Démarrer Jenkins et Tomcat avec le script entrypoint.sh
+CMD ["/usr/local/bin/entrypoint.sh"]
