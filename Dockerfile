@@ -28,7 +28,7 @@ COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Exposer les ports 8081 pour Tomcat et 8080 pour Jenkins
-EXPOSE 8081 8080 50000
+EXPOSE 8011 8080 50000
 
 # Démarrer Jenkins et Tomcat avec le script entrypoint.sh
 CMD ["/usr/local/bin/entrypoint.sh"]
